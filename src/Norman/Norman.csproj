@@ -38,7 +38,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ITestFrameworkDiscovery.cs" />
+    <Compile Include="SimpleAssert.cs" />
+    <Compile Include="SimpleAssertBuilder.cs" />
+    <Compile Include="IAssert.cs" />
+    <Compile Include="IAssertBuilder.cs" />
+    <Compile Include="Norm.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="XUnitDiscovery.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

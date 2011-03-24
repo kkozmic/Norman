@@ -8,8 +8,8 @@
     <ProjectGuid>{0B63A80A-686B-45DE-A235-7A5530246FA3}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Joey.Tests</RootNamespace>
-    <AssemblyName>Joey.Tests</AssemblyName>
+    <RootNamespace>Norman.Tests</RootNamespace>
+    <AssemblyName>Norman.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -44,9 +44,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="XUnitIntegrationTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Joey\Norman.csproj">
+    <ProjectReference Include="..\..\src\Norman\Norman.csproj">
       <Project>{79CED750-E4C1-4C35-93F8-9CD34CE2C844}</Project>
       <Name>Norman</Name>
     </ProjectReference>
