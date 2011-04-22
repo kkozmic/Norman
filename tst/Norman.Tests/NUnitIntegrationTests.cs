@@ -23,70 +23,57 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-namespace Norman
+namespace Norman.Tests
 {
 	using System;
-	using System.Collections.Generic;
-	using System.Reflection;
 
-	using Mono.Cecil;
+	using NUnit.Framework;
 
 	using Norman.NUnitIntegration;
-	using Norman.XUnitIntegration;
 
-	public class Norm
+	using Xunit;
+
+	using Assert = Xunit.Assert;
+
+	public class NUnitIntegrationTests
 	{
-		private static readonly IAssertBuilder defaultAssertBuilder = new SimpleAssertBuilder(new ITestFrameworkDiscovery[]
+		private readonly NUnitDiscovery nunitDiscovery;
+
+		public NUnitIntegrationTests()
 		{
-			new NUnitDiscovery(),
-			new XUnitDiscovery(),
-		});
-
-		private readonly IAssertBuilder assertBuilder;
-
-		private readonly List<INorm> inner = new List<INorm>();
-
-		private IAssert assert;
-
-		public Norm(IAssertBuilder assertBuilder)
-		{
-			this.assertBuilder = assertBuilder;
+			nunitDiscovery = new NUnitDiscovery();
 		}
 
-		public Norm(IAssert assert)
+		[Fact]
+		public void Can_create_assert()
 		{
-			this.assert = assert;
+			Assert.NotNull(nunitDiscovery.BuildAssert(typeof(TestAttribute).Assembly));
 		}
 
-		public AssemblyNorm ForAssemblies(Predicate<AssemblyDefinition> assemblyDiscovery)
+		[Fact]
+		public void Can_detect_xunit()
 		{
-			var fileName = new Uri(Assembly.GetCallingAssembly().CodeBase);
-			var assembly = AssemblyDefinition.ReadAssembly(fileName.LocalPath);
-			var norm = new AssemblyNorm(assembly, assemblyDiscovery);
-			inner.Add(norm);
-			return norm;
+			Assert.NotNull(nunitDiscovery.Detect(AppDomain.CurrentDomain.GetAssemblies()));
 		}
 
-		public TypeNorm ForTypes(Predicate<TypeDefinition> typeDiscovery)
+		[Fact]
+		public void Can_execute_assert_and_fail()
 		{
-			return ForAssemblies(null).ForTypes(typeDiscovery);
+			var assert = nunitDiscovery.BuildAssert(typeof(TestAttribute).Assembly);
+
+			var item = new object();
+			var exception = Assert.Throws<AssertionException>(() => assert.IsTrue(item, o => false, o => "custom message"));
+
+			Assert.Equal("custom message", exception.Message);
+			Assert.Same(item, exception.Data["norman.object"]);
 		}
 
-		public void Verify()
+		[Fact]
+		public void Can_execute_assert_and_pass()
 		{
-			if (assert == null)
-			{
-				assert = assertBuilder.CreateAssert();
-			}
-			foreach (var norm in inner)
-			{
-				norm.Verify(assert);
-			}
-		}
+			var assert = nunitDiscovery.BuildAssert(typeof(TestAttribute).Assembly);
 
-		public static Norm Build()
-		{
-			return new Norm(defaultAssertBuilder);
+			Assert.DoesNotThrow(() => assert.IsTrue(new object(), o => true, o => null));
 		}
 	}
 }

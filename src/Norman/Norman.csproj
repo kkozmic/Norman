@@ -45,14 +45,12 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="xunit">
-      <HintPath>..\..\lib\xunit.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyNorm.cs" />
     <Compile Include="INorm.cs" />
     <Compile Include="ITestFrameworkDiscovery.cs" />
+    <Compile Include="NUnitIntegration\NUnitDiscovery.cs" />
     <Compile Include="SimpleAssert.cs" />
     <Compile Include="SimpleAssertBuilder.cs" />
     <Compile Include="IAssert.cs" />
@@ -60,7 +58,7 @@
     <Compile Include="Norm.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TypeNorm.cs" />
-    <Compile Include="XUnitDiscovery.cs" />
+    <Compile Include="XUnitIntegration\XUnitDiscovery.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
