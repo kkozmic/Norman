@@ -68,6 +68,8 @@
     <Compile Include="NUnitIntegrationTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SimpleNormForTypesTests.cs" />
+    <Compile Include="Types\A.cs" />
+    <Compile Include="Types\UseDateTimeNow.cs" />
     <Compile Include="XUnitIntegrationTests.cs" />
   </ItemGroup>
   <ItemGroup>

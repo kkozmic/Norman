@@ -34,7 +34,7 @@ namespace Norman
 	public class AssemblyNorm : INorm
 	{
 		private readonly Predicate<AssemblyDefinition> assemblyDiscovery;
-		private readonly List<INorm> innerNorms = new List<INorm>();
+		private readonly List<INorm> inner = new List<INorm>();
 		private readonly AssemblyDefinition rootAssembly;
 		private IEnumerable<AssemblyDefinition> matchedAssemblies;
 
@@ -46,7 +46,9 @@ namespace Norman
 
 		public TypeNorm ForTypes(Predicate<TypeDefinition> typeDiscovery)
 		{
-			return new TypeNorm(this, typeDiscovery);
+			var norm = new TypeNorm(this, typeDiscovery);
+			inner.Add(norm);
+			return norm;
 		}
 
 		internal IEnumerable<AssemblyDefinition> GetMatchedAssemblies()
@@ -69,7 +71,7 @@ namespace Norman
 
 		void INorm.Verify(IAssert assert)
 		{
-			innerNorms.ForEach(i => i.Verify(assert));
+			inner.ForEach(i => i.Verify(assert));
 		}
 	}
 }

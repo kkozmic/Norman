@@ -28,9 +28,12 @@ namespace Norman
 	using System;
 	using System.Collections.Generic;
 	using System.Linq;
+	using System.Linq.Expressions;
+	using System.Reflection;
 	using System.Text;
 
 	using Mono.Cecil;
+	using Mono.Cecil.Cil;
 
 	public class TypeNorm : INorm
 	{
@@ -50,6 +53,30 @@ namespace Norman
 			return this;
 		}
 
+		public TypeNorm IsNeverCalling<TType>(Expression<Action<TType>> callExpression)
+		{
+			var method = ExtractCalledMethod(callExpression);
+
+			norms.Add(new[] { new Predicate<TypeDefinition>(t => IsCalling(t, method) == false) });
+			return this;
+		}
+
+		public TypeNorm IsNeverCalling<TType, TOut>(Expression<Func<TType, TOut>> callExpression)
+		{
+			var method = ExtractCalledMethod(callExpression);
+
+			norms.Add(new[] { new Predicate<TypeDefinition>(t => IsCalling(t, method) == false) });
+			return this;
+		}
+
+		public TypeNorm IsNeverCalling<TOut>(Expression<Func<TOut>> callExpression)
+		{
+			var method = ExtractCalledMethod(callExpression);
+
+			norms.Add(new[] { new Predicate<TypeDefinition>(t => IsCalling(t, method) == false) });
+			return this;
+		}
+
 		private string BuildFailureMessage(HashSet<TypeDefinition> failedTypes)
 		{
 			var message = new StringBuilder();
@@ -60,6 +87,17 @@ namespace Norman
 				message.AppendLine(type.FullName);
 			}
 			return message.ToString();
+		}
+
+		private MethodInfo ExtractCalledMethod(LambdaExpression expression)
+		{
+			var body = (MemberExpression)expression.Body;
+			var property = body.Member as PropertyInfo;
+			if (property != null)
+			{
+				return property.GetGetMethod(true);
+			}
+			return (MethodInfo)body.Member;
 		}
 
 		private IEnumerable<TypeDefinition> GetMatchedTypes()
@@ -79,6 +117,36 @@ namespace Norman
 			}
 		}
 
+		private bool IsCalling(TypeDefinition type, MethodInfo method)
+		{
+			return type.Methods.Any(m => IsCalling(m, method));
+		}
+
+		private bool IsCalling(MethodDefinition scannedMethod, MethodInfo method)
+		{
+			if (scannedMethod.HasBody == false)
+			{
+				return false;
+			}
+			foreach (var instruction in scannedMethod.Body.Instructions)
+			{
+				if (IsMethodCall(instruction) == false)
+				{
+					continue;
+				}
+				var methodReference = (MethodReference)instruction.Operand;
+				if (methodReference.Name != method.Name)
+				{
+					continue;
+				}
+				if (AreSameMethod(method, methodReference))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
 		void INorm.Verify(IAssert assert)
 		{
 			var unmatchedTypes = new HashSet<TypeDefinition>();
@@ -92,6 +160,18 @@ namespace Norman
 			}
 
 			assert.IsTrue(unmatchedTypes, t => t.Count == 0, BuildFailureMessage);
+		}
+
+		private static bool AreSameMethod(MethodInfo method, MethodReference methodReference)
+		{
+			var calledMethod = methodReference.Resolve();
+			var token = calledMethod.MetadataToken.ToInt32();
+			return token == method.MetadataToken;
+		}
+
+		private static bool IsMethodCall(Instruction instruction)
+		{
+			return instruction.OpCode == OpCodes.Call || instruction.OpCode == OpCodes.Callvirt;
 		}
 	}
 }

@@ -51,8 +51,9 @@ namespace Norman.Tests
 		}
 
 		[Fact]
-		public void Can_detect_xunit()
+		public void Can_detect_nunit()
 		{
+			Assert.NotNull(typeof(TestAttribute)); // to load NUnit assembly into the appdomain
 			Assert.NotNull(nunitDiscovery.Detect(AppDomain.CurrentDomain.GetAssemblies()));
 		}
 

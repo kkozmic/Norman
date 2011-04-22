@@ -1,4 +1,4 @@
-// Copyright (C) 2011, Krzysztof Kozmic 
+﻿// Copyright (C) 2011, Krzysztof Kozmic 
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -23,44 +23,19 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-namespace Norman.Tests
+namespace Norman.Tests.Types
 {
 	using System;
 
-	using Norman.Tests.Types;
-
-	using Xunit;
-	using Xunit.Sdk;
-
-	public class SimpleNormForTypesTests
+	public class UseDateTimeNow
 	{
-		private readonly Norm norm;
-
-		public SimpleNormForTypesTests()
+		public void SomeMethod()
 		{
-			norm = new Norm(new SimpleAssert(message => new AssertException(message)));
-		}
-
-		[Fact]
-		public void Can_detect_types_in_assembly()
-		{
-			norm.ForAssemblies(a => a.FullName.Contains(".Tests"))
-				.ForTypes(t => t.Name.EndsWith("Tests")).Is(n => n.IsPublic);
-
-			norm.Verify();
-		}
-
-		[Fact]
-		public void Can_detect_types_using_specified_method()
-		{
-			norm.ForAssemblies(a => a.FullName.Contains(".Tests"))
-				.ForTypes(t => t.Namespace.EndsWith(".Types")).IsNeverCalling<object, DateTime>(o => DateTime.Now);
-
-			var exception = Assert.Throws<AssertException>(() => norm.Verify());
-			var message = string.Format("The following 1 types don't conform to the norm.{0}{1}{0}", Environment.NewLine,
-			                            typeof(UseDateTimeNow).FullName);
-
-			Assert.Equal(message, exception.Message);
+			var dateTime = DateTime.Now;
+			if (dateTime > DateTime.Today.Add(TimeSpan.Zero))
+			{
+				dateTime = DateTime.Today;
+			}
 		}
 	}
 }
