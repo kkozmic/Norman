@@ -25,8 +25,64 @@
 
 namespace Norman
 {
-	public abstract class Norm
+	using System;
+	using System.Collections.Generic;
+	using System.Reflection;
+
+	using Mono.Cecil;
+
+	public class Norm
 	{
-		public abstract IAssert Is();
+		private static readonly IAssertBuilder defaultAssertBuilder = new SimpleAssertBuilder(new[]
+		{
+			new XUnitDiscovery(),
+		});
+
+		private readonly IAssertBuilder assertBuilder;
+
+		private readonly List<INorm> inner = new List<INorm>();
+
+		private IAssert assert;
+
+		public Norm(IAssertBuilder assertBuilder)
+		{
+			this.assertBuilder = assertBuilder;
+		}
+
+		public Norm(IAssert assert)
+		{
+			this.assert = assert;
+		}
+
+		public AssemblyNorm ForAssemblies(Predicate<AssemblyDefinition> assemblyDiscovery)
+		{
+			var fileName = new Uri(Assembly.GetCallingAssembly().CodeBase);
+			var assembly = AssemblyDefinition.ReadAssembly(fileName.LocalPath);
+			var norm = new AssemblyNorm(assembly, assemblyDiscovery);
+			inner.Add(norm);
+			return norm;
+		}
+
+		public TypeNorm ForTypes(Predicate<TypeDefinition> typeDiscovery)
+		{
+			return ForAssemblies(null).ForTypes(typeDiscovery);
+		}
+
+		public void Verify()
+		{
+			if (assert == null)
+			{
+				assert = assertBuilder.CreateAssert();
+			}
+			foreach (var norm in inner)
+			{
+				norm.Verify(assert);
+			}
+		}
+
+		public static Norm Build()
+		{
+			return new Norm(defaultAssertBuilder);
+		}
 	}
 }

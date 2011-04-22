@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2011, Krzysztof Kozmic 
+// Copyright (C) 2011, Krzysztof Kozmic 
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -23,42 +23,27 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System.Reflection;
-using System.Runtime.InteropServices;
+namespace Norman.Tests
+{
+	using Xunit;
+	using Xunit.Sdk;
 
-// General Information about an assembly is controlled through the following 
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
+	public class SimpleNormForTypesTests
+	{
+		private readonly Norm norm;
 
-[assembly: AssemblyTitle("Norman.Tests")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Krzysztof Kozmic")]
-[assembly: AssemblyProduct("Norman")]
-[assembly: AssemblyCopyright("Copyright © Krzysztof Kozmic 2011")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+		public SimpleNormForTypesTests()
+		{
+			norm = new Norm(new SimpleAssert(message => new AssertException(message)));
+		}
 
-// Setting ComVisible to false makes the types in this assembly not visible 
-// to COM components.  If you need to access a type in this assembly from 
-// COM, set the ComVisible attribute to true on that type.
+		[Fact]
+		public void Can_detect_types_in_assembly()
+		{
+			norm.ForAssemblies(a => a.FullName.Contains(".Tests"))
+				.ForTypes(t => t.Name.EndsWith("Tests")).Is(n => n.IsPublic);
 
-[assembly: ComVisible(false)]
-
-// The following GUID is for the ID of the typelib if this project is exposed to COM
-
-[assembly: Guid("119a77c0-7422-4b37-8ac7-7314567bf8b6")]
-
-// Version information for an assembly consists of the following four values:
-//
-//      Major Version
-//      Minor Version 
-//      Build Number
-//      Revision
-//
-// You can specify all the values or you can default the Build and Revision Numbers 
-// by using the '*' as shown below:
-// [assembly: AssemblyVersion("1.0.*")]
-
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+			norm.Verify();
+		}
+	}
+}

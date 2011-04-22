@@ -23,52 +23,75 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-namespace Norman.Tests
+namespace Norman
 {
 	using System;
+	using System.Collections.Generic;
+	using System.Linq;
+	using System.Text;
 
-	using Xunit;
-	using Xunit.Sdk;
+	using Mono.Cecil;
 
-	public class XUnitIntegrationTests
+	public class TypeNorm : INorm
 	{
-		private readonly XUnitDiscovery xunitDiscovery;
+		private readonly AssemblyNorm assembly;
+		private readonly List<Predicate<TypeDefinition>[]> norms = new List<Predicate<TypeDefinition>[]>();
+		private readonly Predicate<TypeDefinition> typeDiscovery;
 
-		public XUnitIntegrationTests()
+		public TypeNorm(AssemblyNorm assembly, Predicate<TypeDefinition> typeDiscovery)
 		{
-			xunitDiscovery = new XUnitDiscovery();
+			this.assembly = assembly;
+			this.typeDiscovery = typeDiscovery;
 		}
 
-		[Fact]
-		public void Can_create_assert()
+		public TypeNorm Is(params Predicate<TypeDefinition>[] norms)
 		{
-			Assert.NotNull(xunitDiscovery.BuildAssert(typeof(FactAttribute).Assembly));
+			this.norms.Add(norms);
+			return this;
 		}
 
-		[Fact]
-		public void Can_detect_xunit()
+		private string BuildFailureMessage(HashSet<TypeDefinition> failedTypes)
 		{
-			Assert.NotNull(xunitDiscovery.Detect(AppDomain.CurrentDomain.GetAssemblies()));
+			var message = new StringBuilder();
+			message.AppendFormat("The following {0} types don't conform to the norm.", failedTypes.Count);
+			message.AppendLine();
+			foreach (var type in failedTypes)
+			{
+				message.AppendLine(type.FullName);
+			}
+			return message.ToString();
 		}
 
-		[Fact]
-		public void Can_execute_assert_and_fail()
+		private IEnumerable<TypeDefinition> GetMatchedTypes()
 		{
-			var assert = xunitDiscovery.BuildAssert(typeof(FactAttribute).Assembly);
-
-			var item = new object();
-			var exception = Assert.Throws<AssertException>(() => assert.IsTrue(item, o => false, o => "custom message"));
-
-			Assert.Equal("custom message", exception.Message);
-			Assert.Same(item, exception.Data["norman.object"]);
+			foreach (var assemblyDefinition in assembly.GetMatchedAssemblies())
+			{
+				foreach (var module in assemblyDefinition.Modules)
+				{
+					foreach (var type in module.Types)
+					{
+						if (typeDiscovery(type))
+						{
+							yield return type;
+						}
+					}
+				}
+			}
 		}
 
-		[Fact]
-		public void Can_execute_assert_and_pass()
+		void INorm.Verify(IAssert assert)
 		{
-			var assert = xunitDiscovery.BuildAssert(typeof(FactAttribute).Assembly);
+			var unmatchedTypes = new HashSet<TypeDefinition>();
+			var matchedTypes = GetMatchedTypes();
+			foreach (var type in matchedTypes)
+			{
+				if (norms.Exists(n => n.All(x => x(type))) == false)
+				{
+					unmatchedTypes.Add(type);
+				}
+			}
 
-			Assert.DoesNotThrow(() => assert.IsTrue(new object(), o => true, o => null));
+			assert.IsTrue(unmatchedTypes, t => t.Count == 0, BuildFailureMessage);
 		}
 	}
 }

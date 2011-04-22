@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2011, Krzysztof Kozmic 
+// Copyright (C) 2011, Krzysztof Kozmic 
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -23,42 +23,53 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System.Reflection;
-using System.Runtime.InteropServices;
+namespace Norman
+{
+	using System;
+	using System.Collections.Generic;
+	using System.Linq;
 
-// General Information about an assembly is controlled through the following 
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
+	using Mono.Cecil;
 
-[assembly: AssemblyTitle("Norman.Tests")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Krzysztof Kozmic")]
-[assembly: AssemblyProduct("Norman")]
-[assembly: AssemblyCopyright("Copyright © Krzysztof Kozmic 2011")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+	public class AssemblyNorm : INorm
+	{
+		private readonly Predicate<AssemblyDefinition> assemblyDiscovery;
+		private readonly List<INorm> innerNorms = new List<INorm>();
+		private readonly AssemblyDefinition rootAssembly;
+		private IEnumerable<AssemblyDefinition> matchedAssemblies;
 
-// Setting ComVisible to false makes the types in this assembly not visible 
-// to COM components.  If you need to access a type in this assembly from 
-// COM, set the ComVisible attribute to true on that type.
+		public AssemblyNorm(AssemblyDefinition rootAssembly, Predicate<AssemblyDefinition> assemblyDiscovery)
+		{
+			this.rootAssembly = rootAssembly;
+			this.assemblyDiscovery = assemblyDiscovery;
+		}
 
-[assembly: ComVisible(false)]
+		public TypeNorm ForTypes(Predicate<TypeDefinition> typeDiscovery)
+		{
+			return new TypeNorm(this, typeDiscovery);
+		}
 
-// The following GUID is for the ID of the typelib if this project is exposed to COM
+		internal IEnumerable<AssemblyDefinition> GetMatchedAssemblies()
+		{
+			if (matchedAssemblies == null)
+			{
+				matchedAssemblies = MatchAssemblies().ToArray();
+			}
+			return matchedAssemblies;
+		}
 
-[assembly: Guid("119a77c0-7422-4b37-8ac7-7314567bf8b6")]
+		private IEnumerable<AssemblyDefinition> MatchAssemblies()
+		{
+			if (assemblyDiscovery(rootAssembly))
+			{
+				return new[] { rootAssembly };
+			}
+			return Enumerable.Empty<AssemblyDefinition>();
+		}
 
-// Version information for an assembly consists of the following four values:
-//
-//      Major Version
-//      Minor Version 
-//      Build Number
-//      Revision
-//
-// You can specify all the values or you can default the Build and Revision Numbers 
-// by using the '*' as shown below:
-// [assembly: AssemblyVersion("1.0.*")]
-
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+		void INorm.Verify(IAssert assert)
+		{
+			innerNorms.ForEach(i => i.Verify(assert));
+		}
+	}
+}
