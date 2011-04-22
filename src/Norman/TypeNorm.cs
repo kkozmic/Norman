@@ -38,7 +38,7 @@ namespace Norman
 	public class TypeNorm : INorm
 	{
 		private readonly AssemblyNorm assembly;
-		private readonly List<Predicate<TypeDefinition>[]> norms = new List<Predicate<TypeDefinition>[]>();
+		private readonly List<Predicate<TypeDefinition>> norms = new List<Predicate<TypeDefinition>>();
 		private readonly Predicate<TypeDefinition> typeDiscovery;
 
 		public TypeNorm(AssemblyNorm assembly, Predicate<TypeDefinition> typeDiscovery)
@@ -47,9 +47,9 @@ namespace Norman
 			this.typeDiscovery = typeDiscovery;
 		}
 
-		public TypeNorm Is(params Predicate<TypeDefinition>[] norms)
+		public TypeNorm Is(Predicate<TypeDefinition> norm)
 		{
-			this.norms.Add(norms);
+			norms.Add(norm);
 			return this;
 		}
 
@@ -57,7 +57,7 @@ namespace Norman
 		{
 			var method = ExtractCalledMethod(callExpression);
 
-			norms.Add(new[] { new Predicate<TypeDefinition>(t => IsCalling(t, method) == false) });
+			norms.Add(t => IsCalling(t, method) == false);
 			return this;
 		}
 
@@ -65,15 +65,14 @@ namespace Norman
 		{
 			var method = ExtractCalledMethod(callExpression);
 
-			norms.Add(new[] { new Predicate<TypeDefinition>(t => IsCalling(t, method) == false) });
+			norms.Add(t => IsCalling(t, method) == false);
 			return this;
 		}
 
 		public TypeNorm IsNeverCalling<TOut>(Expression<Func<TOut>> callExpression)
 		{
 			var method = ExtractCalledMethod(callExpression);
-
-			norms.Add(new[] { new Predicate<TypeDefinition>(t => IsCalling(t, method) == false) });
+			norms.Add(t => IsCalling(t, method) == false);
 			return this;
 		}
 
@@ -153,7 +152,7 @@ namespace Norman
 			var matchedTypes = GetMatchedTypes();
 			foreach (var type in matchedTypes)
 			{
-				if (norms.Exists(n => n.All(x => x(type))) == false)
+				if (norms.Any(x => x(type) == false))
 				{
 					unmatchedTypes.Add(type);
 				}
