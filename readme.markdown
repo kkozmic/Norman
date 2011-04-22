@@ -1,5 +1,5 @@
-Joey
+Norman
 ========
 
 ### In few words
-Joey is a _scenario driven_ integration testing framework built on top of xUnit.NET
+Norman is a _convention validation framework_ for .NET. Currently works with XUnit.NET but support for other major testing frameworks is pending, as is some actual documentation and functionality.
