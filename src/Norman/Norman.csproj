@@ -50,6 +50,7 @@
     <Compile Include="AssemblyNorm.cs" />
     <Compile Include="INorm.cs" />
     <Compile Include="ITestFrameworkDiscovery.cs" />
+    <Compile Include="MsTestIntegration\MsTestDiscovery.cs" />
     <Compile Include="NUnitIntegration\NUnitDiscovery.cs" />
     <Compile Include="SimpleAssert.cs" />
     <Compile Include="SimpleAssertBuilder.cs" />

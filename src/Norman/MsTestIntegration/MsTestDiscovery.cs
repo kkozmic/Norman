@@ -23,72 +23,28 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-namespace Norman
+namespace Norman.MsTestIntegration
 {
 	using System;
-	using System.Collections.Generic;
+	using System.Linq;
 	using System.Reflection;
 
-	using Mono.Cecil;
-
-	using Norman.MsTestIntegration;
-	using Norman.NUnitIntegration;
-	using Norman.XUnitIntegration;
-
-	public class Norm
+	public class MsTestDiscovery : ITestFrameworkDiscovery
 	{
-		private static readonly IAssertBuilder defaultAssertBuilder = new SimpleAssertBuilder(new ITestFrameworkDiscovery[]
+		public IAssert BuildAssert(Assembly testFrameworkAssembly)
 		{
-			new NUnitDiscovery(),
-			new XUnitDiscovery(),
-			new MsTestDiscovery(),
-		});
-
-		private readonly IAssertBuilder assertBuilder;
-
-		private readonly List<INorm> inner = new List<INorm>();
-
-		private IAssert assert;
-
-		public Norm(IAssertBuilder assertBuilder)
-		{
-			this.assertBuilder = assertBuilder;
+			return new SimpleAssert(BuildDelegate(testFrameworkAssembly.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException")));
 		}
 
-		public Norm(IAssert assert)
+		public Assembly Detect(Assembly[] loadedAssemblies)
 		{
-			this.assert = assert;
+			return
+				loadedAssemblies.FirstOrDefault(a => a.FullName.StartsWith("microsoft.visualstudio.qualitytools.unittestframework,", StringComparison.OrdinalIgnoreCase));
 		}
 
-		public AssemblyNorm ForAssemblies(Predicate<AssemblyDefinition> assemblyDiscovery)
+		private Func<string, Exception> BuildDelegate(Type type)
 		{
-			var fileName = Assembly.GetCallingAssembly().Location;
-			var assembly = AssemblyDefinition.ReadAssembly(fileName);
-			var norm = new AssemblyNorm(assembly, assemblyDiscovery);
-			inner.Add(norm);
-			return norm;
-		}
-
-		public TypeNorm ForTypes(Predicate<TypeDefinition> typeDiscovery)
-		{
-			return ForAssemblies(null).ForTypes(typeDiscovery);
-		}
-
-		public void Verify()
-		{
-			if (assert == null)
-			{
-				assert = assertBuilder.CreateAssert();
-			}
-			foreach (var norm in inner)
-			{
-				norm.Verify(assert);
-			}
-		}
-
-		public static Norm Build()
-		{
-			return new Norm(defaultAssertBuilder);
+			return m => (Exception)Activator.CreateInstance(type, m);
 		}
 	}
 }
