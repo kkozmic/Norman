@@ -5,6 +5,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Norman", "src\Norman\Norman
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Norman.Tests", "tst\Norman.Tests\Norman.Tests.csproj", "{0B63A80A-686B-45DE-A235-7A5530246FA3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FC5BB2A8-9FA1-4387-AC5E-A132B1C6B829}"
+	ProjectSection(SolutionItems) = preProject
+		readme.markdown = readme.markdown
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
