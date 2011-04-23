@@ -23,27 +23,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-namespace Norman.NUnitIntegration
+namespace Norman.TestFrameworkIntegration
 {
-	using System;
-	using System.Linq;
-	using System.Reflection;
-
-	public class NUnitDiscovery : ITestFrameworkDiscovery
+	public class NUnitDiscovery : SimpleTestFrameworkDiscovery
 	{
-		public IAssert BuildAssert(Assembly testFrameworkAssembly)
+		public NUnitDiscovery()
+			: base("nunit.framework", "NUnit.Framework.AssertionException")
 		{
-			return new SimpleAssert(BuildDelegate(testFrameworkAssembly.GetType("NUnit.Framework.AssertionException")));
-		}
-
-		public Assembly Detect(Assembly[] loadedAssemblies)
-		{
-			return loadedAssemblies.FirstOrDefault(a => a.FullName.StartsWith("nunit.framework,", StringComparison.OrdinalIgnoreCase));
-		}
-
-		private Func<string, Exception> BuildDelegate(Type type)
-		{
-			return m => (Exception)Activator.CreateInstance(type, m);
 		}
 	}
 }

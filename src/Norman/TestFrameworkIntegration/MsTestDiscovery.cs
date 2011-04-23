@@ -23,28 +23,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-namespace Norman.MsTestIntegration
+namespace Norman.TestFrameworkIntegration
 {
-	using System;
-	using System.Linq;
-	using System.Reflection;
-
-	public class MsTestDiscovery : ITestFrameworkDiscovery
+	public class MsTestDiscovery : SimpleTestFrameworkDiscovery
 	{
-		public IAssert BuildAssert(Assembly testFrameworkAssembly)
+		public MsTestDiscovery()
+			: base("microsoft.visualstudio.qualitytools.unittestframework", "Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException")
 		{
-			return new SimpleAssert(BuildDelegate(testFrameworkAssembly.GetType("Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException")));
-		}
-
-		public Assembly Detect(Assembly[] loadedAssemblies)
-		{
-			return
-				loadedAssemblies.FirstOrDefault(a => a.FullName.StartsWith("microsoft.visualstudio.qualitytools.unittestframework,", StringComparison.OrdinalIgnoreCase));
-		}
-
-		private Func<string, Exception> BuildDelegate(Type type)
-		{
-			return m => (Exception)Activator.CreateInstance(type, m);
 		}
 	}
 }

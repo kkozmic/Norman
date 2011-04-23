@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2011, Krzysztof Kozmic 
+// Copyright (C) 2011, Krzysztof Kozmic 
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -23,22 +23,31 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-namespace Norman.XUnitIntegration
+namespace Norman.TestFrameworkIntegration
 {
 	using System;
 	using System.Linq;
 	using System.Reflection;
 
-	public class XUnitDiscovery : ITestFrameworkDiscovery
+	public class SimpleTestFrameworkDiscovery : ITestFrameworkDiscovery
 	{
+		private readonly string assertionExceptionTypeName;
+		private readonly string frameworkAssemblyName;
+
+		public SimpleTestFrameworkDiscovery(string frameworkAssemblyName, string assertionExceptionTypeName)
+		{
+			this.assertionExceptionTypeName = assertionExceptionTypeName;
+			this.frameworkAssemblyName = frameworkAssemblyName + ",";
+		}
+
 		public IAssert BuildAssert(Assembly testFrameworkAssembly)
 		{
-			return new SimpleAssert(BuildDelegate(testFrameworkAssembly.GetType("Xunit.Sdk.AssertException")));
+			return new SimpleAssert(BuildDelegate(testFrameworkAssembly.GetType(assertionExceptionTypeName)));
 		}
 
 		public Assembly Detect(Assembly[] loadedAssemblies)
 		{
-			return loadedAssemblies.FirstOrDefault(a => a.FullName.StartsWith("xunit,", StringComparison.OrdinalIgnoreCase));
+			return loadedAssemblies.FirstOrDefault(a => a.FullName.StartsWith(frameworkAssemblyName, StringComparison.OrdinalIgnoreCase));
 		}
 
 		private Func<string, Exception> BuildDelegate(Type type)

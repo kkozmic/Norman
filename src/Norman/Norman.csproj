@@ -50,16 +50,17 @@
     <Compile Include="AssemblyNorm.cs" />
     <Compile Include="INorm.cs" />
     <Compile Include="ITestFrameworkDiscovery.cs" />
-    <Compile Include="MsTestIntegration\MsTestDiscovery.cs" />
-    <Compile Include="NUnitIntegration\NUnitDiscovery.cs" />
+    <Compile Include="TestFrameworkIntegration\MsTestDiscovery.cs" />
+    <Compile Include="TestFrameworkIntegration\NUnitDiscovery.cs" />
     <Compile Include="SimpleAssert.cs" />
     <Compile Include="SimpleAssertBuilder.cs" />
     <Compile Include="IAssert.cs" />
     <Compile Include="IAssertBuilder.cs" />
     <Compile Include="Norm.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestFrameworkIntegration\SimpleTestFrameworkDiscovery.cs" />
     <Compile Include="TypeNorm.cs" />
-    <Compile Include="XUnitIntegration\XUnitDiscovery.cs" />
+    <Compile Include="TestFrameworkIntegration\XUnitDiscovery.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

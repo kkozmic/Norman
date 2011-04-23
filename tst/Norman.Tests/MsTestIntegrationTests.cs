@@ -29,7 +29,7 @@ namespace Norman.Tests
 
 	using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-	using Norman.MsTestIntegration;
+	using Norman.TestFrameworkIntegration;
 
 	using Xunit;
 

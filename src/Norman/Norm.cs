@@ -31,9 +31,7 @@ namespace Norman
 
 	using Mono.Cecil;
 
-	using Norman.MsTestIntegration;
-	using Norman.NUnitIntegration;
-	using Norman.XUnitIntegration;
+	using Norman.TestFrameworkIntegration;
 
 	public class Norm
 	{

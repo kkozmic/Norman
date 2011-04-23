@@ -1,4 +1,4 @@
-// Copyright (C) 2011, Krzysztof Kozmic 
+﻿// Copyright (C) 2011, Krzysztof Kozmic 
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -23,58 +23,12 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-namespace Norman.Tests
+namespace Norman.TestFrameworkIntegration
 {
-	using System;
-
-	using NUnit.Framework;
-
-	using Norman.TestFrameworkIntegration;
-
-	using Xunit;
-
-	using Assert = Xunit.Assert;
-
-	public class NUnitIntegrationTests
+	public class XUnitDiscovery : SimpleTestFrameworkDiscovery
 	{
-		private readonly NUnitDiscovery nunitDiscovery;
-
-		public NUnitIntegrationTests()
+		public XUnitDiscovery() : base("xunit", "Xunit.Sdk.AssertException")
 		{
-			nunitDiscovery = new NUnitDiscovery();
-		}
-
-		[Fact]
-		public void Can_create_assert()
-		{
-			Assert.NotNull(nunitDiscovery.BuildAssert(typeof(TestAttribute).Assembly));
-		}
-
-		[Fact]
-		public void Can_detect_nunit()
-		{
-			Assert.NotNull(typeof(TestAttribute)); // to load NUnit assembly into the appdomain
-			Assert.NotNull(nunitDiscovery.Detect(AppDomain.CurrentDomain.GetAssemblies()));
-		}
-
-		[Fact]
-		public void Can_execute_assert_and_fail()
-		{
-			var assert = nunitDiscovery.BuildAssert(typeof(TestAttribute).Assembly);
-
-			var item = new object();
-			var exception = Assert.Throws<AssertionException>(() => assert.IsTrue(item, o => false, o => "custom message"));
-
-			Assert.Equal("custom message", exception.Message);
-			Assert.Same(item, exception.Data["norman.object"]);
-		}
-
-		[Fact]
-		public void Can_execute_assert_and_pass()
-		{
-			var assert = nunitDiscovery.BuildAssert(typeof(TestAttribute).Assembly);
-
-			Assert.DoesNotThrow(() => assert.IsTrue(new object(), o => true, o => null));
 		}
 	}
 }

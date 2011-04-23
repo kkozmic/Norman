@@ -27,7 +27,7 @@ namespace Norman.Tests
 {
 	using System;
 
-	using Norman.XUnitIntegration;
+	using Norman.TestFrameworkIntegration;
 
 	using Xunit;
 	using Xunit.Sdk;
