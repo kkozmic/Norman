@@ -28,6 +28,7 @@ namespace Norman
 	using System;
 	using System.Collections.Generic;
 	using System.Linq;
+	using System.Reflection;
 
 	using Mono.Cecil;
 
@@ -35,12 +36,10 @@ namespace Norman
 	{
 		private readonly Predicate<AssemblyDefinition> assemblyDiscovery;
 		private readonly List<INorm> inner = new List<INorm>();
-		private readonly AssemblyDefinition rootAssembly;
 		private IEnumerable<AssemblyDefinition> matchedAssemblies;
 
-		public AssemblyNorm(AssemblyDefinition rootAssembly, Predicate<AssemblyDefinition> assemblyDiscovery)
+		public AssemblyNorm(Predicate<AssemblyDefinition> assemblyDiscovery)
 		{
-			this.rootAssembly = rootAssembly;
 			this.assemblyDiscovery = assemblyDiscovery;
 		}
 
@@ -62,11 +61,20 @@ namespace Norman
 
 		private IEnumerable<AssemblyDefinition> MatchAssemblies()
 		{
-			if (assemblyDiscovery(rootAssembly))
+			return GetAssemblyDefinitions().Where(assemblyDiscovery.Invoke);
+		}
+
+		private IEnumerable<AssemblyDefinition> GetAssemblyDefinitions()
+		{
+			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
 			{
-				return new[] { rootAssembly };
+				yield return GetAssemblyDefinition(assembly);
 			}
-			return Enumerable.Empty<AssemblyDefinition>();
+		}
+
+		private AssemblyDefinition GetAssemblyDefinition(Assembly assembly)
+		{
+			return AssemblyDefinition.ReadAssembly(assembly.Location);
 		}
 
 		void INorm.Verify(IAssert assert)

@@ -27,7 +27,6 @@ namespace Norman
 {
 	using System;
 	using System.Collections.Generic;
-	using System.Reflection;
 
 	using Mono.Cecil;
 
@@ -60,9 +59,7 @@ namespace Norman
 
 		public AssemblyNorm ForAssemblies(Predicate<AssemblyDefinition> assemblyDiscovery)
 		{
-			var fileName = Assembly.GetCallingAssembly().Location;
-			var assembly = AssemblyDefinition.ReadAssembly(fileName);
-			var norm = new AssemblyNorm(assembly, assemblyDiscovery);
+			var norm = new AssemblyNorm(assemblyDiscovery);
 			inner.Add(norm);
 			return norm;
 		}
