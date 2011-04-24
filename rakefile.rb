@@ -11,12 +11,12 @@ task :default => [:compile, :test]
 desc "Compile solution"
 msbuild :compile do |msb|
     msb.properties :configuration => CONFIG
-    msb.path_to_command = File.join(DOT_NET_PATH, "msbuild.exe")
+    msb.command = File.join(DOT_NET_PATH, "msbuild.exe")
     msb.targets :Clean, :Build
     msb.solution = "Norman.sln"
 end
 
 xunit :test => [:compile] do |xunit|
-    xunit.path_to_command = "lib/xunit.console.clr4.exe"
+    xunit.command = "lib/xunit.console.clr4.exe"
     xunit.assembly = "tst/Norman.Tests/bin/#{CONFIG}/Norman.Tests.dll"
 end
