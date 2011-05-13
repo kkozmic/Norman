@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyNorm.cs" />
+    <Compile Include="CecilIntegration\ReflectionCecilBridge.cs" />
     <Compile Include="INorm.cs" />
     <Compile Include="ITestFrameworkDiscovery.cs" />
     <Compile Include="TestFrameworkIntegration\MsTestDiscovery.cs" />

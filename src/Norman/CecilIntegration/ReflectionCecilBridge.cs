@@ -23,59 +23,37 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-namespace Norman
+namespace Norman.CecilIntegration
 {
 	using System;
-	using System.Collections.Generic;
 	using System.Linq;
+	using System.Reflection;
 
 	using Mono.Cecil;
 
-	using Norman.CecilIntegration;
-
-	public class AssemblyNorm : INorm
+	public static class ReflectionCecilBridge
 	{
-		private readonly Predicate<AssemblyDefinition> assemblyDiscovery;
-		private readonly List<INorm> inner = new List<INorm>();
-		private IEnumerable<AssemblyDefinition> matchedAssemblies;
-
-		public AssemblyNorm(Predicate<AssemblyDefinition> assemblyDiscovery)
+		public static AssemblyDefinition ResolveAssembly(this Assembly assembly)
 		{
-			this.assemblyDiscovery = assemblyDiscovery;
+			// NOTE: this could use some caching I suppose and loading via stream is probably a better option too
+			return AssemblyDefinition.ReadAssembly(assembly.Location);
 		}
 
-		public TypeNorm ForTypes(Predicate<TypeDefinition> typeDiscovery)
+		public static MethodDefinition ResolveMethod(this MethodInfo method)
 		{
-			var norm = new TypeNorm(this, typeDiscovery);
-			inner.Add(norm);
-			return norm;
+			return ResolveType(method.DeclaringType).Methods.Single(m => AreSameMethod(method, m));
 		}
 
-		internal IEnumerable<AssemblyDefinition> GetMatchedAssemblies()
+		public static TypeDefinition ResolveType(this Type type)
 		{
-			if (matchedAssemblies == null)
-			{
-				matchedAssemblies = MatchAssemblies().ToArray();
-			}
-			return matchedAssemblies;
+			return type.Assembly.ResolveAssembly().Modules.Select(m => m.GetType(type.FullName)).Single();
 		}
 
-		private IEnumerable<AssemblyDefinition> GetAssemblyDefinitions()
+		private static bool AreSameMethod(MethodInfo method, MethodReference methodReference)
 		{
-			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-			{
-				yield return assembly.ResolveAssembly();
-			}
-		}
-
-		private IEnumerable<AssemblyDefinition> MatchAssemblies()
-		{
-			return GetAssemblyDefinitions().Where(assemblyDiscovery.Invoke);
-		}
-
-		void INorm.Verify(IAssert assert)
-		{
-			inner.ForEach(i => i.Verify(assert));
+			var calledMethod = methodReference.Resolve();
+			var token = calledMethod.MetadataToken.ToInt32();
+			return token == method.MetadataToken;
 		}
 	}
 }

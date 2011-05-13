@@ -23,59 +23,20 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-namespace Norman
+namespace Norman.Tests.Types.ViewModels
 {
-	using System;
-	using System.Collections.Generic;
-	using System.Linq;
+	using Norman.Tests.Types.Services;
 
-	using Mono.Cecil;
-
-	using Norman.CecilIntegration;
-
-	public class AssemblyNorm : INorm
+	public class BarViewModel
 	{
-		private readonly Predicate<AssemblyDefinition> assemblyDiscovery;
-		private readonly List<INorm> inner = new List<INorm>();
-		private IEnumerable<AssemblyDefinition> matchedAssemblies;
-
-		public AssemblyNorm(Predicate<AssemblyDefinition> assemblyDiscovery)
+		public int DoSomethingUsesViewModelHere(int arg)
 		{
-			this.assemblyDiscovery = assemblyDiscovery;
-		}
-
-		public TypeNorm ForTypes(Predicate<TypeDefinition> typeDiscovery)
-		{
-			var norm = new TypeNorm(this, typeDiscovery);
-			inner.Add(norm);
-			return norm;
-		}
-
-		internal IEnumerable<AssemblyDefinition> GetMatchedAssemblies()
-		{
-			if (matchedAssemblies == null)
+			if (arg > 3)
 			{
-				matchedAssemblies = MatchAssemblies().ToArray();
+				var service = new BarService();
+				return service.Method(arg - 3);
 			}
-			return matchedAssemblies;
-		}
-
-		private IEnumerable<AssemblyDefinition> GetAssemblyDefinitions()
-		{
-			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-			{
-				yield return assembly.ResolveAssembly();
-			}
-		}
-
-		private IEnumerable<AssemblyDefinition> MatchAssemblies()
-		{
-			return GetAssemblyDefinitions().Where(assemblyDiscovery.Invoke);
-		}
-
-		void INorm.Verify(IAssert assert)
-		{
-			inner.ForEach(i => i.Verify(assert));
+			return -1;
 		}
 	}
 }

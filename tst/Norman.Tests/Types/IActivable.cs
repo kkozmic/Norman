@@ -23,59 +23,9 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-namespace Norman
+namespace Norman.Tests.Types
 {
-	using System;
-	using System.Collections.Generic;
-	using System.Linq;
-
-	using Mono.Cecil;
-
-	using Norman.CecilIntegration;
-
-	public class AssemblyNorm : INorm
+	public interface IActivable
 	{
-		private readonly Predicate<AssemblyDefinition> assemblyDiscovery;
-		private readonly List<INorm> inner = new List<INorm>();
-		private IEnumerable<AssemblyDefinition> matchedAssemblies;
-
-		public AssemblyNorm(Predicate<AssemblyDefinition> assemblyDiscovery)
-		{
-			this.assemblyDiscovery = assemblyDiscovery;
-		}
-
-		public TypeNorm ForTypes(Predicate<TypeDefinition> typeDiscovery)
-		{
-			var norm = new TypeNorm(this, typeDiscovery);
-			inner.Add(norm);
-			return norm;
-		}
-
-		internal IEnumerable<AssemblyDefinition> GetMatchedAssemblies()
-		{
-			if (matchedAssemblies == null)
-			{
-				matchedAssemblies = MatchAssemblies().ToArray();
-			}
-			return matchedAssemblies;
-		}
-
-		private IEnumerable<AssemblyDefinition> GetAssemblyDefinitions()
-		{
-			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-			{
-				yield return assembly.ResolveAssembly();
-			}
-		}
-
-		private IEnumerable<AssemblyDefinition> MatchAssemblies()
-		{
-			return GetAssemblyDefinitions().Where(assemblyDiscovery.Invoke);
-		}
-
-		void INorm.Verify(IAssert assert)
-		{
-			inner.ForEach(i => i.Verify(assert));
-		}
 	}
 }

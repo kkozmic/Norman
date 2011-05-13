@@ -66,12 +66,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Types\IActivable.cs" />
     <Compile Include="MsTestIntegrationTests.cs" />
     <Compile Include="NUnitIntegrationTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SimpleNormForTypesTests.cs" />
     <Compile Include="Types\A.cs" />
+    <Compile Include="Types\HasIsActiveProperty.cs" />
+    <Compile Include="Types\Services\BarService.cs" />
+    <Compile Include="Types\Services\FooService.cs" />
     <Compile Include="Types\UseDateTimeNow.cs" />
+    <Compile Include="Types\ViewModels\BarViewModel.cs" />
+    <Compile Include="Types\ViewModels\FooViewModel.cs" />
     <Compile Include="XUnitIntegrationTests.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -83,6 +89,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

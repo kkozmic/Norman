@@ -35,6 +35,8 @@ namespace Norman
 	using Mono.Cecil;
 	using Mono.Cecil.Cil;
 
+	using Norman.CecilIntegration;
+
 	public class TypeNorm : INorm
 	{
 		private readonly AssemblyNorm assembly;
@@ -53,7 +55,14 @@ namespace Norman
 			return this;
 		}
 
-		public TypeNorm IsNeverCalling<TType>(Expression<Action<TType>> callExpression)
+		public TypeNorm MustImplement<TInterface>()
+		{
+			var @interface = typeof(TInterface).ResolveType();
+			norms.Add(t => t.Interfaces.Contains(@interface));
+			return this;
+		}
+
+		public TypeNorm MustNotCall<TType>(Expression<Action<TType>> callExpression)
 		{
 			var method = ExtractCalledMethod(callExpression);
 
@@ -61,7 +70,7 @@ namespace Norman
 			return this;
 		}
 
-		public TypeNorm IsNeverCalling<TType, TOut>(Expression<Func<TType, TOut>> callExpression)
+		public TypeNorm MustNotCall<TType, TOut>(Expression<Func<TType, TOut>> callExpression)
 		{
 			var method = ExtractCalledMethod(callExpression);
 
@@ -69,11 +78,17 @@ namespace Norman
 			return this;
 		}
 
-		public TypeNorm IsNeverCalling<TOut>(Expression<Func<TOut>> callExpression)
+		public TypeNorm MustNotCall<TOut>(Expression<Func<TOut>> callExpression)
 		{
 			var method = ExtractCalledMethod(callExpression);
 			norms.Add(t => IsCalling(t, method) == false);
 			return this;
+		}
+
+		public void MustNotCallAny(Predicate<TypeDefinition> matchTypes)
+		{
+			var types = new Lazy<IEnumerable<TypeDefinition>>(() => GetAllTypes().Where(matchTypes.Invoke));
+			norms.Add(t => IsCallingAny(t, types.Value) == false);
 		}
 
 		private string BuildFailureMessage(HashSet<TypeDefinition> failedTypes)
@@ -88,40 +103,35 @@ namespace Norman
 			return message.ToString();
 		}
 
-		private MethodInfo ExtractCalledMethod(LambdaExpression expression)
+		private MethodDefinition ExtractCalledMethod(LambdaExpression expression)
 		{
 			var body = (MemberExpression)expression.Body;
 			var property = body.Member as PropertyInfo;
 			if (property != null)
 			{
-				return property.GetGetMethod(true);
+				return property.GetGetMethod(true).ResolveMethod();
 			}
-			return (MethodInfo)body.Member;
+			return ((MethodInfo)body.Member).ResolveMethod();
+		}
+
+		private IEnumerable<TypeDefinition> GetAllTypes()
+		{
+			return assembly.GetMatchedAssemblies()
+				.SelectMany(a => a.Modules)
+				.SelectMany(m => m.Types);
 		}
 
 		private IEnumerable<TypeDefinition> GetMatchedTypes()
 		{
-			foreach (var assemblyDefinition in assembly.GetMatchedAssemblies())
-			{
-				foreach (var module in assemblyDefinition.Modules)
-				{
-					foreach (var type in module.Types)
-					{
-						if (typeDiscovery(type))
-						{
-							yield return type;
-						}
-					}
-				}
-			}
+			return GetAllTypes().Where(typeDiscovery.Invoke);
 		}
 
-		private bool IsCalling(TypeDefinition type, MethodInfo method)
+		private bool IsCalling(TypeDefinition type, MethodDefinition method)
 		{
 			return type.Methods.Any(m => IsCalling(m, method));
 		}
 
-		private bool IsCalling(MethodDefinition scannedMethod, MethodInfo method)
+		private bool IsCalling(MethodDefinition scannedMethod, MethodDefinition method)
 		{
 			if (scannedMethod.HasBody == false)
 			{
@@ -138,12 +148,28 @@ namespace Norman
 				{
 					continue;
 				}
-				if (AreSameMethod(method, methodReference))
+				var methodDefinition = methodReference.Resolve();
+				if (method.MetadataToken.ToInt32() == methodDefinition.MetadataToken.ToInt32())
 				{
 					return true;
 				}
 			}
 			return false;
+		}
+
+		private bool IsCalling(MethodDefinition scannedMethod, TypeDefinition typeDefinition)
+		{
+			return typeDefinition.Methods.Any(m => IsCalling(scannedMethod, m));
+		}
+
+		private bool IsCallingAny(TypeDefinition type, IEnumerable<TypeDefinition> types)
+		{
+			return type.Methods.Any(m => IsCallingAny(m, types));
+		}
+
+		private bool IsCallingAny(MethodDefinition scannedMethod, IEnumerable<TypeDefinition> types)
+		{
+			return types.Any(t => IsCalling(scannedMethod, t));
 		}
 
 		void INorm.Verify(IAssert assert)
@@ -159,13 +185,6 @@ namespace Norman
 			}
 
 			assert.IsTrue(unmatchedTypes, t => t.Count == 0, BuildFailureMessage);
-		}
-
-		private static bool AreSameMethod(MethodInfo method, MethodReference methodReference)
-		{
-			var calledMethod = methodReference.Resolve();
-			var token = calledMethod.MetadataToken.ToInt32();
-			return token == method.MetadataToken;
 		}
 
 		private static bool IsMethodCall(Instruction instruction)

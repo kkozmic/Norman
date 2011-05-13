@@ -26,8 +26,10 @@
 namespace Norman.Tests
 {
 	using System;
+	using System.Linq;
 
 	using Norman.Tests.Types;
+	using Norman.Tests.Types.ViewModels;
 
 	using Xunit;
 	using Xunit.Sdk;
@@ -51,10 +53,37 @@ namespace Norman.Tests
 		}
 
 		[Fact]
+		public void Can_detect_types_not_implementing_interface()
+		{
+			norm.ForAssemblies(a => a.FullName.Contains(".Tests"))
+				.ForTypes(t => t.Properties.Any(p => p.Name == "IsActive"))
+				.MustImplement<IActivable>();
+
+			var exception = Assert.Throws<AssertException>(() => norm.Verify());
+			var message = string.Format("The following 1 types don't conform to the norm.{0}{1}{0}", Environment.NewLine,
+			                            typeof(HasIsActiveProperty).FullName);
+			Assert.Equal(message, exception.Message);
+		}
+
+		[Fact]
+		public void Can_detect_types_referencing_forbidden_types()
+		{
+			norm.ForAssemblies(a => a.FullName.Contains(".Tests"))
+				.ForTypes(t => t.Namespace.EndsWith(".ViewModels"))
+				.MustNotCallAny(t => t.Namespace.EndsWith(".Services"));
+
+			var exception = Assert.Throws<AssertException>(() => norm.Verify());
+			var message = string.Format("The following 1 types don't conform to the norm.{0}{1}{0}", Environment.NewLine,
+			                            typeof(BarViewModel).FullName);
+			Assert.Equal(message, exception.Message);
+		}
+
+		[Fact]
 		public void Can_detect_types_using_specified_method()
 		{
 			norm.ForAssemblies(a => a.FullName.Contains(".Tests"))
-				.ForTypes(t => t.Namespace.EndsWith(".Types")).IsNeverCalling<object, DateTime>(o => DateTime.Now);
+				.ForTypes(t => t.Namespace.EndsWith(".Types"))
+				.MustNotCall<object, DateTime>(o => DateTime.Now);
 
 			var exception = Assert.Throws<AssertException>(() => norm.Verify());
 			var message = string.Format("The following 1 types don't conform to the norm.{0}{1}{0}", Environment.NewLine,
